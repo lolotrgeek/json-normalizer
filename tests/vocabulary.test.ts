@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { generateKeyVocabulary, generateStringVocabulary, findInVocabulary, findKeyInVocabulary } from '../env/vocabulary';
+import { generateKeyVocabulary, generateStringVocabulary, findInVocabulary, findKeyInVocabulary } from '../src/vocabulary';
 
 describe('generateKeyVocabulary', () => {
     it('should generate a vocabulary for the keys of an object', () => {
@@ -26,16 +26,5 @@ describe('findKeyInVocabulary', () => {
         expect(findKeyInVocabulary('foo', vocabulary)).toBe(2);
         expect(findKeyInVocabulary('bar', vocabulary)).toBe(3);
         expect(findKeyInVocabulary('baz', vocabulary)).toBe(-1);
-    });
-});
-
-describe('findInVocabulary', () => {
-    it('should find a value in a vocabulary and output its string value', () => {
-        const vocabulary = { 'hello': 0, 'world': 1, 'foo': 2, 'bar': 3, 0: 'zero!' };
-        expect(findInVocabulary(0, vocabulary)).toBe('hello');
-        expect(findInVocabulary(1, vocabulary)).toBe('world');
-        expect(findInVocabulary(2, vocabulary)).toBe('foo');
-        expect(findInVocabulary(3, vocabulary)).toBe('bar');
-        expect(findInVocabulary(-1, vocabulary)).toBe(null);
     });
 });

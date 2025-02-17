@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { flattenObject, round, unFlattenObject } from "../env/util";
+import { flattenObject, round, unFlattenObject } from "../utils/util";
 
 describe('round', () => {
     it('should round number to specified decimal places', () => {

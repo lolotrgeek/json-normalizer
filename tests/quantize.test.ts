@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import {quantize, unquantize} from '../utils/quantize.js'; 
+import { quantize, unquantize } from '../utils/quantize';
 
 describe('quantize', () => {
     it('should quantize a decimal string into an integer based on a given precision', () => {
@@ -21,4 +21,4 @@ describe('unquantize', () => {
         expect(unquantize(1, 1)).toBe(0.1);
         expect(unquantize(5256529595356732, 18)).toBe(0.005256529595356732);
     });
-})
+});
