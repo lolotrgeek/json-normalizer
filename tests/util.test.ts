@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { flattenObject, round, unFlattenObject } from "../utils/util";
+import { arrayObjectToArray, flattenObject, round, unFlattenObject } from "../utils/util";
 
 describe('round', () => {
     it('should round number to specified decimal places', () => {
@@ -132,6 +132,40 @@ describe('unFlattenObject', () => {
 
     it('should handle empty object', () => {
         const result = unFlattenObject({});
+        expect(result).toEqual({});
+    });
+
+    // Add more tests as needed for different inputs and edge cases
+});
+
+describe('arrayObjectToArray', () => {
+    
+    it('should convert object with numeric keys into an array', () => {
+        const objectWithNumericKeys = {
+            0: 'a',
+            1: 'b',
+            2: 'c'
+        };
+        const result = arrayObjectToArray(objectWithNumericKeys);
+        expect(result).toEqual(['a', 'b', 'c']);
+    });
+
+    it('should handle object with non-numeric keys', () => {
+        const objectWithNonNumericKeys = {
+            a: 1,
+            b: 2,
+            c: 3
+        };
+        const result = arrayObjectToArray(objectWithNonNumericKeys);
+        expect(result).toEqual({
+            a: 1,
+            b: 2,
+            c: 3
+        });
+    });
+
+    it('should handle empty object', () => {
+        const result = arrayObjectToArray({});
         expect(result).toEqual({});
     });
 

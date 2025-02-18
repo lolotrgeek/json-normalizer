@@ -157,6 +157,26 @@ export function unFlattenObject(data: Record<string, any>): Record<string, any> 
 }
 
 /**
+ * Converts an object with numeric keys into an array.
+ * @param object 
+ * @returns  `{0: "a", 1: "b", 2: "c"}` -> `["a", "b", "c"]`
+ */
+export function arrayObjectToArray(object: Record<string, any>): any[] | Record<string, any> {
+    // Check if all keys in "object" are numeric strings.
+    const keys = Object.keys(object);
+    console.log(keys)
+    if (keys.length > 0 && keys.every(key => !isNaN(Number(key)))) {
+        // Convert object with numeric keys into an array.
+        const arr = keys
+            .map(Number)
+            .sort((a, b) => a - b)
+            .map(i => object[i.toString()]);
+        return arr;
+    } 
+    return object
+}
+
+/**
  * Round half to even
  * @param num The number to round.
  * @param decimalPlaces The number of decimal places (default is 2).
