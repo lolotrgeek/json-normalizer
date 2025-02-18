@@ -3,11 +3,13 @@ import {
     findMinMax,
     mergeObjects,
     mergeObjectsAndFindMinMax,
-    mergeTripleArrays,
+    mergeDataset,
     mergeTripleArraysAndFindMinMax,
     normalizeDataset,
     normalizeValue,
-    updateMinMaxIndex
+    updateMinMaxIndex,
+    mergeTriples,
+    mergeDatasetAndFindMinMax
 } from "../src/normalizer";
 
 describe('mergeObjects', () => {
@@ -52,13 +54,37 @@ describe('mergeObjectsAndFindMinMax', () => {
     });
 });
 
-describe('mergeTripleArrays', () => {
+describe('mergeTriples', () => {
+    it('should merge array of triples into a single object with array values', () => {
+        const triples: [number, number, number][] = [
+            [0, 1, 2],
+            [1, 2, 3],
+            [0, 3, 4],
+            [1, 4, 5]
+        ];
+        const result = mergeTriples(triples);
+        expect(result).toEqual({
+            0: [1, 3],
+            1: [2, 4]
+        });
+    }
+    );
+    it('should handle empty array', () => {
+        const triples: [number, number, number][] = [];
+        const result = mergeTriples(triples);
+        expect(result).toEqual({});
+    }
+    );
+});
+
+
+describe('mergeDataSet', () => {
     it('should merge array of arrays with triples into a single object with array values', () => {
         const arrays: [number, number, number][][] = [
             [[0, 1, 2], [1, 2, 3]],
             [[0, 3, 4], [1, 4, 5]]
         ];
-        const result = mergeTripleArrays(arrays);
+        const result = mergeDataset(arrays);
         expect(result).toEqual({
             0: [1, 3],
             1: [2, 4]
@@ -67,18 +93,18 @@ describe('mergeTripleArrays', () => {
 
     it('should handle empty array', () => {
         const arrays: [number, number, number][][] = [];
-        const result = mergeTripleArrays(arrays);
+        const result = mergeDataset(arrays);
         expect(result).toEqual({});
     });
 });
 
-describe('mergeTripleArraysAndFindMinMax', () => {
+describe('mergeDatasetAndFindMinMax', () => {
     it('should merge array of arrays with triples and find min and max values for each key', () => {
         const arrays: [number, number, number][][] = [
             [[0, 1, 2], [1, 2, 3]],
             [[0, 3, 4], [1, 4, 5]]
         ];
-        const result = mergeTripleArraysAndFindMinMax(arrays);
+        const result = mergeDatasetAndFindMinMax(arrays);
         expect(result).toEqual({
             values: {
                 0: { min: 1, max: 3 },
@@ -90,10 +116,31 @@ describe('mergeTripleArraysAndFindMinMax', () => {
 
     it('should handle empty array', () => {
         const arrays: [number, number, number][][] = [];
-        const result = mergeTripleArraysAndFindMinMax(arrays);
+        const result = mergeDatasetAndFindMinMax(arrays);
         expect(result).toEqual({ values: {}, keys: { min: Infinity, max: -Infinity } });
     });
 });
+
+describe('mergeTripleArraysAndFindMinMax', () => {
+    it('should merge array of arrays with triples and find min and max values for each key', () => {
+        const arrays: [number, number, number][] = [[0, 1, 2], [1, 2, 3], [0, 3, 4], [1, 4, 5]]
+        
+        const result = mergeTripleArraysAndFindMinMax(arrays);
+        expect(result).toEqual({
+            values: {
+                0: { min: 1, max: 3 },
+                1: { min: 2, max: 4 }
+            },
+            keys: { min: 0, max: 1 }
+        });
+    });
+
+    it('should handle empty array', () => {
+        const arrays: [number, number, number][] = [];
+        const result = mergeTripleArraysAndFindMinMax(arrays);
+        expect(result).toEqual({ values: {}, keys: { min: Infinity, max: -Infinity } });
+    });
+})
 
 describe('findMinMax', () => {
     it('should find min and max values for each key in the object', () => {
