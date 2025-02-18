@@ -1,4 +1,5 @@
 import { round } from "../utils/util";
+import { Triple } from "./encoder";
 
 export interface MinMax {
     min: number;
@@ -77,7 +78,7 @@ export function mergeObjectsAndFindMinMax(objects: Record<string | number, numbe
  * @param triples An array of triples [key, value, type].
  * @returns An object mapping key to an array of values.
  */
-export function mergeTriples(triples: [number, number, number][]): Record<number, number[]> {
+export function mergeTriples(triples: Triple[]): Record<number, number[]> {
     const result: Record<number, number[]> = {};
     triples.forEach(triple => {
         const key = triple[0];
@@ -93,7 +94,7 @@ export function mergeTriples(triples: [number, number, number][]): Record<number
     return result;
 }
 
-export function mergeDataset(dataset: [number, number, number][][]): Record<number, number[]> {
+export function mergeDataset(dataset: Triple[][]): Record<number, number[]> {
     const result: Record<number, number[]> = {};
     dataset.map(triples => {
         triples.forEach(triple => {
@@ -115,7 +116,7 @@ export function mergeDataset(dataset: [number, number, number][][]): Record<numb
  * @param triples An array of triples [key, value, type].
  * @returns An object with min/max for values and keys.
  */
-export function mergeTripleArraysAndFindMinMax(triples: [number, number, number][]): KeysMinMax {
+export function mergeTripleArraysAndFindMinMax(triples: Triple[]): KeysMinMax {
     const merged = mergeTriples(triples);
     return findMinMax(
         // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
@@ -127,7 +128,7 @@ export function mergeTripleArraysAndFindMinMax(triples: [number, number, number]
     ) as KeysMinMax;
 }
 
-export function mergeDatasetAndFindMinMax(dataset: [number, number, number][][]): KeysMinMax {
+export function mergeDatasetAndFindMinMax(dataset: Triple[][]): KeysMinMax {
     const merged = mergeDataset(dataset);
     return findMinMax(
         // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
@@ -215,7 +216,7 @@ export function denormalizeValue(value: number, min: number, max: number): numbe
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A normalized dataset with the same structure as the input.
  */
-export function normalize(triples: [number, number, number][], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): [number, number, number][] {
+export function normalize(triples: Triple[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Triple[] {
     return triples.map(triple => {
         const key = triple[0];
         const value = triple[1];
@@ -236,7 +237,7 @@ export function normalize(triples: [number, number, number][], minMaxIndex: Keys
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A denormalized dataset with the same structure as the input.
  */
-export function denormalize(triples: [number, number, number][], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): [number, number, number][] {
+export function denormalize(triples: Triple[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Triple[] {
     return triples.map(triple => {
         const key = triple[0];
         const value = triple[1];
@@ -262,11 +263,11 @@ export function denormalize(triples: [number, number, number][], minMaxIndex: Ke
  * @returns A normalized dataset with the same structure as the input.
  */
 export function normalizeDataset(
-    dataset: [number, number, number][][],
+    dataset: Triple[][],
     minMaxIndex: KeysMinMax | null = null,
     precision: number = 6,
     maxTypePrecision: number = 18
-): [number, number, number][][] {
+): Triple[][] {
     // Generate minMaxIndex if not provided
     if (!minMaxIndex) {
         minMaxIndex = mergeDatasetAndFindMinMax(dataset);
@@ -286,11 +287,11 @@ export function normalizeDataset(
  * @returns A denormalized dataset with the same structure as the input.
  */
 export function deNormalizeDataset(
-    dataset: [number, number, number][][],
+    dataset: Triple[][],
     minMaxIndex: KeysMinMax,
     precision: number = 6,
     maxTypePrecision: number = 18
-): [number, number, number][][] {
+): Triple[][] {
     return dataset.map(triples => {
         return denormalize(triples, minMaxIndex, precision, maxTypePrecision);
     });

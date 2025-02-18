@@ -1,6 +1,8 @@
 import { quantize, unquantize } from "../utils/quantize";
 import { findInVocabulary, findKeyInVocabulary } from "./vocabulary";
 
+export type Triple = [number, number, number];
+
 /**
  * Encodes numeric representations of data into triples.
  * @param key 
@@ -8,9 +10,9 @@ import { findInVocabulary, findKeyInVocabulary } from "./vocabulary";
  * @param precision used for quantization and typing, `0` means no quantization, `-1` means string
  * @returns [key, value, type] -> [number, number, number]
  */
-export function encodeTriple(key: number, value: number | string, precision: number = 0): [number, number, number] {
+export function encodeTriple(key: number, value: number | string, precision: number = 0): Triple {
     if (key === null || value === null || precision === null) return [-1, -1, -1];
-    if(typeof value === 'string') value = Number(value)
+    if (typeof value === 'string') value = Number(value)
     if (typeof key !== 'number' || isNaN(value) || typeof precision !== 'number') return [-1, -1, -1];
     let type: number = -1;
     if (typeof value === 'number' && precision === -1) type = -1;
@@ -31,7 +33,7 @@ export function encodeObject(
     obj: Record<string, any>,
     keyVocabulary: Record<string, number>,
     stringVocabulary: Record<string, number>
-): [number, number, number][] {
+): Triple[] {
     return Object.entries(obj).map(([key, value]) => {
         if (findKeyInVocabulary(key, keyVocabulary) === -1) {
             console.log(`Key ${key} not found in keyVocabulary`);
@@ -66,7 +68,7 @@ export function encodeObject(
  * @returns A human readable object.
  */
 export function decodeObject(
-    triples: [number, number, number][],
+    triples: Triple[],
     keyVocabulary: Record<string, number>,
     stringVocabulary: Record<string, number>
 ): Record<string, any> {
@@ -95,7 +97,7 @@ export function decodeObject(
  * @returns An array of key-value pairs.
  */
 export function decodeObjectMap(
-    triples: [number, number, number][],
+    triples: Triple[],
     keyVocabulary: Record<string, number>,
     stringVocabulary: Record<string, number>
 ): Array<[string | null | undefined, any]> {
