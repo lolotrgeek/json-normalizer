@@ -105,32 +105,102 @@ export const execAsync = (fun: () => void): void => {
 };
 
 /**
- * Flattens an object into a single level object with keys as the path to the value
+ * Flattens an object into a single level object with keys as the path to the value.
  * 
  * Nested Objects: { a: { b: 2 } } --> { "a.b": 2 }.
  * 
- * Arrays: { a: [1, 2] } --> { "a.0": 1, "a.1": 2 }
+ * Arrays:
+ *  - If all elements are objects and have the same keys, each element is flattened using a negative index.
+ *    For example, [{a:1}, {a:2}] --> { "-0.a": 1, "-1.a": 2 }.
+ *  - Otherwise, arrays are flattened using normal (positive) indices.
+ *  - This function now also handles the case when the initial object is an array.
  * 
- * @param ob 
- * @returns 
+ * @param ob The object (or array) to flatten.
+ * @returns A flattened object.
  */
-export function flattenObject(ob: Record<string, any>): Record<string, any> {
+export function flattenObject(ob: Record<string, any> | any[]): Record<string, any> {
     const toReturn: Record<string, any> = {};
-    for (const i in ob) {
-        if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
-        if (typeof ob[i] === 'object' && ob[i] !== null) {
-            const flatObject = flattenObject(ob[i]);
-            for (const x in flatObject) {
-                if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
-                toReturn[i + '.' + x] = flatObject[x];
+
+    // Helper for processing an array.
+    const processArray = (arr: any[], prefix: string) => {
+        if (
+            arr.length > 0 &&
+            arr.every(elem => elem !== null && typeof elem === 'object')
+        ) {
+            // Check if every element has the same set of keys.
+            const firstKeys = Object.keys(arr[0]).sort();
+            const uniform = arr.every(elem => {
+                const keys = Object.keys(elem).sort();
+                return JSON.stringify(keys) === JSON.stringify(firstKeys);
+            });
+
+            if (uniform) {
+                // Flatten using negative indices.
+                arr.forEach((elem, index) => {
+                    const negIndex = "-" + index; // e.g. "-0", "-1", etc.
+                    const newPrefix = prefix ? `${prefix}.${negIndex}` : negIndex;
+                    const flatObject = flattenObject(elem);
+                    for (const x in flatObject) {
+                        if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
+                        toReturn[`${newPrefix}.${x}`] = flatObject[x];
+                    }
+                });
+            } else {
+                // Use normal positive indices.
+                arr.forEach((elem, index) => {
+                    const newPrefix = prefix ? `${prefix}.${index}` : `${index}`;
+                    if (elem !== null && typeof elem === 'object') {
+                        const flatObject = flattenObject(elem);
+                        for (const x in flatObject) {
+                            if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
+                            toReturn[`${newPrefix}.${x}`] = flatObject[x];
+                        }
+                    } else {
+                        toReturn[newPrefix] = elem;
+                    }
+                });
             }
         } else {
-            toReturn[i] = ob[i];
+            // Non-uniform or empty array.
+            arr.forEach((elem, index) => {
+                const newPrefix = prefix ? `${prefix}.${index}` : `${index}`;
+                if (elem !== null && typeof elem === 'object') {
+                    const flatObject = flattenObject(elem);
+                    for (const x in flatObject) {
+                        if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
+                        toReturn[`${newPrefix}.${x}`] = flatObject[x];
+                    }
+                } else {
+                    toReturn[newPrefix] = elem;
+                }
+            });
+        }
+    };
+
+    if (Array.isArray(ob)) {
+        // If the root object is an array, process it using no prefix.
+        processArray(ob, "");
+    } else {
+        // Process properties of the object.
+        for (const i in ob) {
+            if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
+            const value = ob[i];
+
+            if (Array.isArray(value)) {
+                processArray(value, i);
+            } else if (value !== null && typeof value === 'object') {
+                const flatObject = flattenObject(value);
+                for (const x in flatObject) {
+                    if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
+                    toReturn[`${i}.${x}`] = flatObject[x];
+                }
+            } else {
+                toReturn[i] = value;
+            }
         }
     }
     return toReturn;
 }
-
 /**
  * 
  * @param data 

@@ -126,7 +126,7 @@ describe('decodeObject', () => {
     });
 
     it('should return undefined for any triple containing [-1,-1,-1]', () => {
-        const triples: [number, number, number][] = [[-1, -1, -1]];
+        const triples: [number, number, number, number][] = [[-1, -1, -1, -1]];
         const keyVocabulary = { key1: 1 };
         const stringVocabulary = { value1: 0 };
         const result = decodeObject(triples, keyVocabulary, stringVocabulary);

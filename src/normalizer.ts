@@ -1,4 +1,5 @@
 import { round } from "../utils/util";
+import { Quadruple } from "./encoder";
 
 export interface MinMax {
     min: number;
@@ -73,15 +74,15 @@ export function mergeObjectsAndFindMinMax(objects: Record<string | number, numbe
 }
 
 /**
- * Combines arrays of triples into a single object that holds each key and its values across all triples.
- * @param triples An array of triples [key, value, type].
+ * Combines arrays of quadruples into a single object that holds each key and its values across all quadruples.
+ * @param quadruples An array of quadruples [key, value, type].
  * @returns An object mapping key to an array of values.
  */
-export function mergeTriples(triples: [number, number, number][]): Record<number, number[]> {
+export function mergeQuads(quadruples: Quadruple[]): Record<number, number[]> {
     const result: Record<number, number[]> = {};
-    triples.forEach(triple => {
-        const key = triple[0];
-        const value = triple[1];
+    quadruples.forEach(quadruple => {
+        const key = quadruple[0];
+        const value = quadruple[1];
 
         if (!result[key]) {
             result[key] = [];
@@ -93,12 +94,12 @@ export function mergeTriples(triples: [number, number, number][]): Record<number
     return result;
 }
 
-export function mergeDataset(dataset: [number, number, number][][]): Record<number, number[]> {
+export function mergeDataset(dataset: Quadruple[][]): Record<number, number[]> {
     const result: Record<number, number[]> = {};
-    dataset.map(triples => {
-        triples.forEach(triple => {
-            const key = triple[0];
-            const value = triple[1];
+    dataset.map(quadruples => {
+        quadruples.forEach(quadruple => {
+            const key = quadruple[0];
+            const value = quadruple[1];
     
             if (!result[key]) {
                 result[key] = [];
@@ -111,14 +112,14 @@ export function mergeDataset(dataset: [number, number, number][][]): Record<numb
 }
 
 /**
- * Combines triple arrays and finds the min and max of the merged values along with key boundaries.
- * @param triples An array of triples [key, value, type].
+ * Combines quadruple arrays and finds the min and max of the merged values along with key boundaries.
+ * @param quadruples An array of quadruples [key, value, type].
  * @returns An object with min/max for values and keys.
  */
-export function mergeTripleArraysAndFindMinMax(triples: [number, number, number][]): KeysMinMax {
-    const merged = mergeTriples(triples);
+export function mergeQuadsAndFindMinMax(quadruples: Quadruple[]): KeysMinMax {
+    const merged = mergeQuads(quadruples);
     return findMinMax(
-        // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
+        // Since mergequadrupleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
         Object.keys(merged).reduce((acc, key) => {
             acc[key] = merged[Number(key)];
             return acc;
@@ -127,10 +128,10 @@ export function mergeTripleArraysAndFindMinMax(triples: [number, number, number]
     ) as KeysMinMax;
 }
 
-export function mergeDatasetAndFindMinMax(dataset: [number, number, number][][]): KeysMinMax {
+export function mergeDatasetAndFindMinMax(dataset: Quadruple[][]): KeysMinMax {
     const merged = mergeDataset(dataset);
     return findMinMax(
-        // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
+        // Since mergequadrupleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
         Object.keys(merged).reduce((acc, key) => {
             acc[key] = merged[Number(key)];
             return acc;
@@ -142,10 +143,10 @@ export function mergeDatasetAndFindMinMax(dataset: [number, number, number][][])
 
 
 /**
- * Generates or updates a minMaxIndex based on the key and value of a triple.
+ * Generates or updates a minMaxIndex based on the key and value of a quadruple.
  * @param minMaxIndex The current minMaxIndex object.
- * @param key The key from the triple.
- * @param value The value from the triple.
+ * @param key The key from the quadruple.
+ * @param value The value from the quadruple.
  * @returns The updated minMaxIndex.
  */
 export function updateMinMaxIndex(minMaxIndex: MinMaxIndex, key: number, value: number): MinMaxIndex {
@@ -209,38 +210,42 @@ export function denormalizeValue(value: number, min: number, max: number): numbe
 
 /**
  * 
- * @param triples 
+ * @param quadruples 
  * @param minMaxIndex An existing minMaxIndex;
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
+ * @param maxIndex The maximum index (default 18).
  * @returns A normalized dataset with the same structure as the input.
  */
-export function normalize(triples: [number, number, number][], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): [number, number, number][] {
-    return triples.map(triple => {
-        const key = triple[0];
-        const value = triple[1];
-        const type = triple[2];
+export function normalize(quadruples: Quadruple[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Quadruple[] {
+    return quadruples.map(quadruple => {
+        const key = quadruple[0];
+        const value = quadruple[1];
+        const type = quadruple[2];
+        const index = quadruple[3];
         const minMax = minMaxIndex.values![key];
         const normalizedValue = round(normalizeValue(value, minMax.min, minMax.max), precision);
         const normalizedKey = round(normalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), precision);
         const normalizedType = round(normalizeValue(type, -1, maxTypePrecision), precision);
-        return [normalizedKey, normalizedValue, normalizedType];
+        const normalizedIndex = round(normalizeValue(index, 0, quadruples.length), index);
+        return [normalizedKey, normalizedValue, normalizedType, normalizedIndex];
     })
 }
 
 /**
  * 
- * @param triples 
+ * @param quadruples 
  * @param minMaxIndex The minMaxIndex that was used for normalization.
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A denormalized dataset with the same structure as the input.
  */
-export function denormalize(triples: [number, number, number][], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): [number, number, number][] {
-    return triples.map(triple => {
-        const key = triple[0];
-        const value = triple[1];
-        const type = triple[2];
+export function denormalize(quadruples: Quadruple[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Quadruple[] {
+    return quadruples.map(quadruple => {
+        const key = quadruple[0];
+        const value = quadruple[1];
+        const type = quadruple[2];
+        const index = quadruple[3];
         const denormalizedKey = round(denormalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), 0);
         // Check if denormalizedKey is a key in minMaxIndex
         if (!Object.prototype.hasOwnProperty.call(minMaxIndex.values, denormalizedKey)) {
@@ -249,49 +254,50 @@ export function denormalize(triples: [number, number, number][], minMaxIndex: Ke
         const minMax = minMaxIndex.values[denormalizedKey];
         const denormalizedValue = round(denormalizeValue(value, minMax.min, minMax.max), precision);
         const denormalizedType = round(denormalizeValue(type, -1, maxTypePrecision), precision);
-        return [denormalizedKey, denormalizedValue, denormalizedType];
+        const denormalizedIndex = round(denormalizeValue(index, 0, quadruples.length), 0);
+        return [denormalizedKey, denormalizedValue, denormalizedType, denormalizedIndex];
     })
 }
 
 /**
- * Normalizes a dataset of triple arrays.
- * @param dataset An array of arrays of triples [key, value, type].
+ * Normalizes a dataset of quadruple arrays.
+ * @param dataset An array of arrays of quadruples [key, value, type].
  * @param minMaxIndex An existing minMaxIndex; if null, it will be generated.
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A normalized dataset with the same structure as the input.
  */
 export function normalizeDataset(
-    dataset: [number, number, number][][],
+    dataset: Quadruple[][],
     minMaxIndex: KeysMinMax | null = null,
     precision: number = 6,
     maxTypePrecision: number = 18
-): [number, number, number][][] {
+): Quadruple[][] {
     // Generate minMaxIndex if not provided
     if (!minMaxIndex) {
         minMaxIndex = mergeDatasetAndFindMinMax(dataset);
     }
     // Normalize each value in the dataset
-    return dataset.map(triples => {
-        return normalize(triples, minMaxIndex, precision, maxTypePrecision);
+    return dataset.map(quadruples => {
+        return normalize(quadruples, minMaxIndex, precision, maxTypePrecision);
     });
 }
 
 /**
- * Denormalizes a dataset of triple arrays.
- * @param dataset An array of arrays of normalized triples [key, value, type].
+ * Denormalizes a dataset of quadruple arrays.
+ * @param dataset An array of arrays of normalized quadruples [key, value, type].
  * @param minMaxIndex The minMaxIndex that was used for normalization.
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A denormalized dataset with the same structure as the input.
  */
 export function deNormalizeDataset(
-    dataset: [number, number, number][][],
+    dataset: Quadruple[][],
     minMaxIndex: KeysMinMax,
     precision: number = 6,
     maxTypePrecision: number = 18
-): [number, number, number][][] {
-    return dataset.map(triples => {
-        return denormalize(triples, minMaxIndex, precision, maxTypePrecision);
+): Quadruple[][] {
+    return dataset.map(quadruples => {
+        return denormalize(quadruples, minMaxIndex, precision, maxTypePrecision);
     });
 }
