@@ -1,5 +1,5 @@
 import { round } from "../utils/util";
-import { Triple } from "./encoder";
+import { Quad } from "./encoder";
 
 export interface MinMax {
     min: number;
@@ -74,15 +74,15 @@ export function mergeObjectsAndFindMinMax(objects: Record<string | number, numbe
 }
 
 /**
- * Combines arrays of triples into a single object that holds each key and its values across all triples.
- * @param triples An array of triples [key, value, type].
+ * Combines arrays of quads into a single object that holds each key and its values across all quads.
+ * @param quads An array of quads [key, value, type].
  * @returns An object mapping key to an array of values.
  */
-export function mergeTriples(triples: Triple[]): Record<number, number[]> {
+export function mergeQuads(quads: Quad[]): Record<number, number[]> {
     const result: Record<number, number[]> = {};
-    triples.forEach(triple => {
-        const key = triple[0];
-        const value = triple[1];
+    quads.forEach(quad => {
+        const key = quad[0];
+        const value = quad[1];
 
         if (!result[key]) {
             result[key] = [];
@@ -94,12 +94,12 @@ export function mergeTriples(triples: Triple[]): Record<number, number[]> {
     return result;
 }
 
-export function mergeDataset(dataset: Triple[][]): Record<number, number[]> {
+export function mergeDataset(dataset: Quad[][]): Record<number, number[]> {
     const result: Record<number, number[]> = {};
-    dataset.map(triples => {
-        triples.forEach(triple => {
-            const key = triple[0];
-            const value = triple[1];
+    dataset.map(quads => {
+        quads.forEach(quad => {
+            const key = quad[0];
+            const value = quad[1];
     
             if (!result[key]) {
                 result[key] = [];
@@ -112,14 +112,14 @@ export function mergeDataset(dataset: Triple[][]): Record<number, number[]> {
 }
 
 /**
- * Combines triple arrays and finds the min and max of the merged values along with key boundaries.
- * @param triples An array of triples [key, value, type].
+ * Combines quad arrays and finds the min and max of the merged values along with key boundaries.
+ * @param quads An array of quads [key, value, type].
  * @returns An object with min/max for values and keys.
  */
-export function mergeTripleArraysAndFindMinMax(triples: Triple[]): KeysMinMax {
-    const merged = mergeTriples(triples);
+export function mergeQuadArraysAndFindMinMax(quads: Quad[]): KeysMinMax {
+    const merged = mergeQuads(quads);
     return findMinMax(
-        // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
+        // Since mergeQuadArrays returns keys as numbers, we need to convert keys to string for findMinMax.
         Object.keys(merged).reduce((acc, key) => {
             acc[key] = merged[Number(key)];
             return acc;
@@ -128,10 +128,10 @@ export function mergeTripleArraysAndFindMinMax(triples: Triple[]): KeysMinMax {
     ) as KeysMinMax;
 }
 
-export function mergeDatasetAndFindMinMax(dataset: Triple[][]): KeysMinMax {
+export function mergeDatasetAndFindMinMax(dataset: Quad[][]): KeysMinMax {
     const merged = mergeDataset(dataset);
     return findMinMax(
-        // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
+        // Since mergeQuadArrays returns keys as numbers, we need to convert keys to string for findMinMax.
         Object.keys(merged).reduce((acc, key) => {
             acc[key] = merged[Number(key)];
             return acc;
@@ -143,10 +143,10 @@ export function mergeDatasetAndFindMinMax(dataset: Triple[][]): KeysMinMax {
 
 
 /**
- * Generates or updates a minMaxIndex based on the key and value of a triple.
+ * Generates or updates a minMaxIndex based on the key and value of a quad.
  * @param minMaxIndex The current minMaxIndex object.
- * @param key The key from the triple.
- * @param value The value from the triple.
+ * @param key The key from the quad.
+ * @param value The value from the quad.
  * @returns The updated minMaxIndex.
  */
 export function updateMinMaxIndex(minMaxIndex: MinMaxIndex, key: number, value: number): MinMaxIndex {
@@ -210,38 +210,41 @@ export function denormalizeValue(value: number, min: number, max: number): numbe
 
 /**
  * 
- * @param triples 
+ * @param quads 
  * @param minMaxIndex An existing minMaxIndex;
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A normalized dataset with the same structure as the input.
  */
-export function normalize(triples: Triple[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Triple[] {
-    return triples.map(triple => {
-        const key = triple[0];
-        const value = triple[1];
-        const type = triple[2];
+export function normalize(quads: Quad[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Quad[] {
+    return quads.map(quad => {
+        const key = quad[0];
+        const value = quad[1];
+        const type = quad[2];
+        const index = quad[3]
         const minMax = minMaxIndex.values![key];
         const normalizedValue = round(normalizeValue(value, minMax.min, minMax.max), precision);
         const normalizedKey = round(normalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), precision);
         const normalizedType = round(normalizeValue(type, -1, maxTypePrecision), precision);
-        return [normalizedKey, normalizedValue, normalizedType];
+        const normalizedIndex = round(normalizeValue(index, 0, quads.length))
+        return [normalizedKey, normalizedValue, normalizedType, normalizedIndex];
     })
 }
 
 /**
  * 
- * @param triples 
+ * @param quads 
  * @param minMaxIndex The minMaxIndex that was used for normalization.
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A denormalized dataset with the same structure as the input.
  */
-export function denormalize(triples: Triple[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Triple[] {
-    return triples.map(triple => {
-        const key = triple[0];
-        const value = triple[1];
-        const type = triple[2];
+export function denormalize(quads: Quad[], minMaxIndex: KeysMinMax, precision: number = 6, maxTypePrecision: number = 18): Quad[] {
+    return quads.map(quad => {
+        const key = quad[0];
+        const value = quad[1];
+        const type = quad[2];
+        const index = quad[3]
         const denormalizedKey = round(denormalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), 0);
         // Check if denormalizedKey is a key in minMaxIndex
         if (!Object.prototype.hasOwnProperty.call(minMaxIndex.values, denormalizedKey)) {
@@ -250,49 +253,51 @@ export function denormalize(triples: Triple[], minMaxIndex: KeysMinMax, precisio
         const minMax = minMaxIndex.values[denormalizedKey];
         const denormalizedValue = round(denormalizeValue(value, minMax.min, minMax.max), precision);
         const denormalizedType = round(denormalizeValue(type, -1, maxTypePrecision), precision);
-        return [denormalizedKey, denormalizedValue, denormalizedType];
+        const denormalizedIndex = round(denormalizeValue(index, 0, quads.length))
+
+        return [denormalizedKey, denormalizedValue, denormalizedType, denormalizedIndex];
     })
 }
 
 /**
- * Normalizes a dataset of triple arrays.
- * @param dataset An array of arrays of triples [key, value, type].
+ * Normalizes a dataset of quad arrays.
+ * @param dataset An array of arrays of quads [key, value, type].
  * @param minMaxIndex An existing minMaxIndex; if null, it will be generated.
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A normalized dataset with the same structure as the input.
  */
 export function normalizeDataset(
-    dataset: Triple[][],
+    dataset: Quad[][],
     minMaxIndex: KeysMinMax | null = null,
     precision: number = 6,
     maxTypePrecision: number = 18
-): Triple[][] {
+): Quad[][] {
     // Generate minMaxIndex if not provided
     if (!minMaxIndex) {
         minMaxIndex = mergeDatasetAndFindMinMax(dataset);
     }
     // Normalize each value in the dataset
-    return dataset.map(triples => {
-        return normalize(triples, minMaxIndex, precision, maxTypePrecision);
+    return dataset.map(quads => {
+        return normalize(quads, minMaxIndex, precision, maxTypePrecision);
     });
 }
 
 /**
- * Denormalizes a dataset of triple arrays.
- * @param dataset An array of arrays of normalized triples [key, value, type].
+ * Denormalizes a dataset of quad arrays.
+ * @param dataset An array of arrays of normalized quads [key, value, type].
  * @param minMaxIndex The minMaxIndex that was used for normalization.
  * @param precision The number of decimal places for rounding (default 6).
  * @param maxTypePrecision The maximum type precision (default 18).
  * @returns A denormalized dataset with the same structure as the input.
  */
 export function deNormalizeDataset(
-    dataset: Triple[][],
+    dataset: Quad[][],
     minMaxIndex: KeysMinMax,
     precision: number = 6,
     maxTypePrecision: number = 18
-): Triple[][] {
-    return dataset.map(triples => {
-        return denormalize(triples, minMaxIndex, precision, maxTypePrecision);
+): Quad[][] {
+    return dataset.map(quads => {
+        return denormalize(quads, minMaxIndex, precision, maxTypePrecision);
     });
 }

@@ -1,7 +1,7 @@
 import { arrayObjectToArray, flattenObject, unFlattenObject } from "./utils/util";
 import { decodeObject, encodeObject } from "./src/encoder";
 import { generateKeyVocabulary, generateStringVocabulary } from "./src/vocabulary";
-import { denormalize, mergeTripleArraysAndFindMinMax, normalize } from "./src/normalizer";
+import { denormalize, mergeQuadArraysAndFindMinMax, normalize } from "./src/normalizer";
 
 // Example JSON string
 const jsonStr = `[{
@@ -41,7 +41,7 @@ console.log("Encoded Triples:", triples);
 
 
 // Find the min and max values for each triple for normalization, needed for denormalization later.
-const minMaxIndex = mergeTripleArraysAndFindMinMax(triples);
+const minMaxIndex = mergeQuadArraysAndFindMinMax(triples);
 
 // Normalize the dataset. (Optionally, you can pass an existing minMaxIndex.)
 const normalized = normalize(triples, minMaxIndex);
