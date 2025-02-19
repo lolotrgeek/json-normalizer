@@ -105,6 +105,33 @@ export const execAsync = (fun: () => void): void => {
 };
 
 /**
+ * Determines whether the given key/value pair is likely a timestamp.
+ * Updated to default to assuming timestamps are in milliseconds (ms).
+ *
+ * @param key The property key.
+ * @param value The property value.
+ * @returns True if the value is likely a timestamp.
+ */
+export function isTimestamp(key: string, value: any): boolean {
+    const keyLower = key.toLowerCase();
+    const keyLikelyTimestamp = keyLower.includes("time") || keyLower.includes("date");
+  
+    // Check if value is a number (in milliseconds).
+    const valueLikelyTimestamp = typeof value === "number" && value > 1e12 && value < 2e12;
+
+    // Attempt to create a Date object from the value (assuming it represents ms).
+    let dateIsValid = false;
+    if (valueLikelyTimestamp) {
+        const date = new Date(value); // value is assumed to be in milliseconds.
+        // date.getTime() returns NaN if the date is invalid.
+        dateIsValid = !isNaN(date.getTime());
+    }
+  
+    // Now the key hint is used as an extra indicator, but not required for the value to be considered a timestamp.
+    return valueLikelyTimestamp && dateIsValid;
+}
+
+/**
  * Flattens an object into a single level object with keys as the path to the value
  * 
  * Nested Objects: { a: { b: 2 } } --> { "a.b": 2 }.
