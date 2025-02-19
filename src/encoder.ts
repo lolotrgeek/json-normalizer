@@ -106,7 +106,6 @@ export function encodeObject(
 
         // Fallback to existing processing for other values.
         if (findKeyInVocabulary(key, keyVocabulary) === -1) {
-            console.log(`Key ${key} not found in keyVocabulary`);
             keyVocabulary[key] = Object.keys(keyVocabulary).length;
         }
 
