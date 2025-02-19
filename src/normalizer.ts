@@ -224,7 +224,8 @@ export function normalize(triples: Triple[], minMaxIndex: KeysMinMax, precision:
         const minMax = minMaxIndex.values![key];
         const normalizedValue = round(normalizeValue(value, minMax.min, minMax.max), precision);
         const normalizedKey = round(normalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), precision);
-        const normalizedType = round(normalizeValue(type, -1, maxTypePrecision), precision);
+        const normalizedType = round(normalizeValue(type, -2, maxTypePrecision), precision);
+        if(type === -2) return [normalizedKey, value, normalizedType]; // timestamps are already normalized along a sin or cos curve
         return [normalizedKey, normalizedValue, normalizedType];
     })
 }
@@ -249,7 +250,7 @@ export function denormalize(triples: Triple[], minMaxIndex: KeysMinMax, precisio
         }
         const minMax = minMaxIndex.values[denormalizedKey];
         const denormalizedValue = round(denormalizeValue(value, minMax.min, minMax.max), precision);
-        const denormalizedType = round(denormalizeValue(type, -1, maxTypePrecision), precision);
+        const denormalizedType = round(denormalizeValue(type, -2, maxTypePrecision), precision);
         return [denormalizedKey, denormalizedValue, denormalizedType];
     })
 }
