@@ -104,6 +104,20 @@ export const execAsync = (fun: () => void): void => {
     }, 0);
 };
 
+
+/**
+ *  Parses a date string into a timestamp.
+ * @param value 
+ * @returns  The timestamp if the value is a valid date string, otherwise undefined.
+ */
+export function parseDate(value: any): number | undefined {
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+    const timestamp = Date.parse(value);
+    return !isNaN(timestamp) ? timestamp : undefined;
+}
+
 /**
  * Determines whether the given key/value pair is likely a timestamp.
  * Updated to default to assuming timestamps are in milliseconds (ms).

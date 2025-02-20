@@ -243,13 +243,20 @@ describe('encodeObject', () => {
         const obj = {
             timestamp: 1672531200000
         };
-        const keyVocabulary = {
-            'timestamp.sin': 1,
-            'timestamp.cos': 2
-        };
-        const stringVocabulary: Record<string, number> = {};
-        const { triples } = encodeObject(obj, keyVocabulary, stringVocabulary);
+        const { triples } = encodeObject(obj);
         expect(triples).toEqual([
+            [0, 19358, -2],
+            [1, 0, -2],
+            [2, 1, -2]
+        ]);
+    });
+    it('should encode a date string as a timestamp', () => {
+        const obj = {
+            timestamp: '2023-01-01T00:00:00Z'
+        };
+        const { triples } = encodeObject(obj);
+        expect(triples).toEqual([
+            [0, 19358, -2],
             [1, 0, -2],
             [2, 1, -2]
         ]);

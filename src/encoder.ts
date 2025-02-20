@@ -1,5 +1,5 @@
 import { quantize, unquantize } from "../utils/quantize";
-import { isTimestamp } from "../utils/util";
+import { isTimestamp, parseDate } from "../utils/util";
 import { findInVocabulary, findKeyInVocabulary } from "./vocabulary";
 
 export type Triple = [number, number, number];
@@ -89,9 +89,11 @@ export function encodeObject(
     let triples: Triple[] = [];
 
     Object.entries(obj).forEach(([key, value]) => {
-        if (isTimestamp(key, value)) {
+        let timestamp = parseDate(value);
+        if(!timestamp && isTimestamp(key, value)) timestamp = value;
+        if (timestamp) {
             // Generate two values using unit circle encoding.
-            const [day, sinVal, cosVal] = encodeTimestamp(value);
+            const [day, sinVal, cosVal] = encodeTimestamp(timestamp);
             // Use compound keys e.g., "timestamp.sin" and "timestamp.cos".
             if (findKeyInVocabulary(key + ".day", keyVocabulary) === -1) keyVocabulary[key + ".day"] = Object.keys(keyVocabulary).length;
             if (findKeyInVocabulary(key + ".sin", keyVocabulary) === -1) keyVocabulary[key + ".sin"] = Object.keys(keyVocabulary).length;
