@@ -1,5 +1,5 @@
-import { decodeObject, encodeObject } from "./src/encoder";
-import { deNormalizeDataset, normalizeDataset } from "./src/normalizer";
+import { decodeObject, encodeObject, Triple } from "./src/encoder";
+import { deNormalizeDataset, normalizeDataset, normalize, denormalize } from "./src/normalizer";
 import { generateVocabulary, Vocabulary } from "./src/vocabulary";
 import { flattenObject } from "./utils/util";
 
@@ -11,16 +11,11 @@ import { flattenObject } from "./utils/util";
  * @param stringVocab needed to encode string values from json, will be generated if not provided
  * @returns 
  */
-export function encode(json: string, keyVocab?: Vocabulary, stringVocab?: Vocabulary): [number, number, number][] {
+export function encode(json: string): { triples: Triple[], keyVocabulary: Vocabulary, stringVocabulary: Vocabulary } {
     try {
         const parsed = JSON.parse(json);
         const flattened = flattenObject(parsed);
-        if (!keyVocab || !stringVocab) {
-            const vocab = generateVocabulary(flattened);
-            keyVocab = vocab.keyVocab;
-            stringVocab = vocab.stringVocab;
-        }
-        return encodeObject(flattened, keyVocab, stringVocab);
+        return encodeObject(flattened);
     } catch (error) {
         throw new Error(`Failed to encode JSON: ${error}`);
     }
@@ -28,4 +23,4 @@ export function encode(json: string, keyVocab?: Vocabulary, stringVocab?: Vocabu
 }
 
 
-export { generateVocabulary, normalizeDataset, deNormalizeDataset, decodeObject };
+export { generateVocabulary, normalize, denormalize, normalizeDataset, deNormalizeDataset, decodeObject, encodeObject, flattenObject };
