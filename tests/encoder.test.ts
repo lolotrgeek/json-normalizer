@@ -261,6 +261,17 @@ describe('encodeObject', () => {
             [2, 1, -2]
         ]);
     });
+    it('should encode a null and undefined values as strings', () => {
+        const obj = {
+            key1: null,
+            key2: undefined
+        };
+        const { triples } = encodeObject(obj);
+        expect(triples).toEqual([
+            [0, -1, -1],
+            [1, -1, -1]
+        ]);
+    });
 });
 
 describe('decodeObject', () => {

@@ -89,6 +89,8 @@ export function encodeObject(
     let triples: Triple[] = [];
 
     Object.entries(obj).forEach(([key, value]) => {
+        if(!key) return
+        if(value === null || value === undefined) String(value)
         let timestamp = parseDate(value);
         if(!timestamp && isTimestamp(key, value)) timestamp = value;
         if (timestamp) {
@@ -111,7 +113,7 @@ export function encodeObject(
             keyVocabulary[key] = Object.keys(keyVocabulary).length;
         }
 
-        const numDecimals = (value.toString().split('.')[1] || []).length;
+        const numDecimals = (String(value).split('.')[1] || []).length;
         const precision = numDecimals === 2 ? 2 : numDecimals > 2 ? 18 : numDecimals;
 
         if (typeof value === 'boolean') value = value.toString();
@@ -123,8 +125,7 @@ export function encodeObject(
         } else if (typeof value === 'number' && numDecimals < 2) {
             triples.push(encodeTriple(keyVocabulary[key], value, 0));
         } else {
-            console.log(`Invalid value ${value} for key ${key}`);
-            triples.push([-1, -1, -1]);
+            triples.push([keyVocabulary[key], -1, -1]);
         }
     });
 
