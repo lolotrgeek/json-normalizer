@@ -75,7 +75,7 @@ export function decodeTimestamp(encoded: [number, number, number]): number {
 }
 
 /**
- * Generates an array of triples that can be used as inputs to a neural network.
+ * Generates an array of triples that can be easily decoded back into the original object.
  * @param obj best to use a flattened object otherwise nested objects will be ignored
  * @param keyVocabulary a mapping from keys to their numeric representations, will be mapped if not provided
  * @param stringVocabulary a mapping from string values to their numeric representations, will be mapped if not provided

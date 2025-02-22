@@ -12,8 +12,8 @@ export interface KeysMinMax {
 }
 
 export interface MinMaxIndex {
-    keys?: MinMax;
-    values?: Record<number, MinMax>;
+    keys: MinMax;
+    values: Record<number, MinMax>;
 }
 
 /**
@@ -141,6 +141,35 @@ export function mergeDatasetAndFindMinMax(dataset: Triple[][]): KeysMinMax {
     ) as KeysMinMax;
 }
 
+/**
+ * Combines triple arrays and finds the min and max of the merged values along with key boundaries.
+ * @param sets An array of sets [key, value].
+ * @returns An object with min/max for values and keys.
+ */
+export function mergeAndFindMinMax(sets: [number, number][][]): KeysMinMax {
+    const merged: Record<number, number[]> = {};
+    sets.forEach(set => {
+        set.forEach(pair => {
+            const key = pair[0];
+            const value = pair[1];
+
+            if (!merged[key]) {
+                merged[key] = [];
+            }
+
+            merged[key].push(value);
+        });
+    });
+
+    return findMinMax(
+        // Since mergeTripleArrays returns keys as numbers, we need to convert keys to string for findMinMax.
+        Object.keys(merged).reduce((acc, key) => {
+            acc[key] = merged[Number(key)];
+            return acc;
+        }, {} as Record<string, number[]>),
+        true
+    ) as KeysMinMax;
+}
 
 /**
  * Generates or updates a minMaxIndex based on the key and value of a triple.
@@ -295,5 +324,62 @@ export function deNormalizeDataset(
 ): Triple[][] {
     return dataset.map(triples => {
         return denormalize(triples, minMaxIndex, precision, maxTypePrecision);
+    });
+}
+
+
+/**
+ * 
+ * @param encodings 
+ * @param minMaxIndex An existing minMaxIndex;
+ * @param precision The number of decimal places for rounding (default 6).
+ * @param maxTypePrecision The maximum type precision (default 18).
+ * @returns A normalized dataset with the same structure as the input.
+ */
+export function NNnormalize(
+  encodings: [number, number][],
+  minMaxIndex: KeysMinMax,
+  types: Record<number, number>,
+  precision: number = 6
+): [number, number][] {
+    return encodings.map(encoding => {
+        const key = encoding[0];
+        const value = encoding[1];
+        const minMax = minMaxIndex.values![key];
+        const normalizedKey = round(normalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), precision);
+        // Only normalize numeric values (types !== -1), otherwise leave as is.
+        const normalizedValue = (types[key] === -1)
+            ? value
+            : round(normalizeValue(value, minMax.min, minMax.max), precision);
+        return [normalizedKey, normalizedValue];
+    });
+}
+
+/**
+ * 
+ * @param encodings 
+ * @param minMaxIndex 
+ * @param precision 
+ * @returns 
+ */
+export function NNdenormalize(
+  encodings: [number, number][],
+  minMaxIndex: KeysMinMax,
+  types: Record<number, number>,
+  precision: number = 6
+): [number, number][] {
+    return encodings.map(encoding => {
+        const key = encoding[0];
+        const value = encoding[1];
+        const denormalizedKey = round(denormalizeValue(key, minMaxIndex.keys.min, minMaxIndex.keys.max), 0);
+        // Make sure the key exists.
+        if (!Object.prototype.hasOwnProperty.call(minMaxIndex.values, denormalizedKey)) {
+            throw new Error(`Key ${denormalizedKey} not found in minMaxIndex`);
+        }
+        const minMax = minMaxIndex.values[denormalizedKey];
+        const denormalizedValue = (types[denormalizedKey] === -1)
+            ? value
+            : round(denormalizeValue(value, minMax.min, minMax.max), precision);
+        return [denormalizedKey, denormalizedValue];
     });
 }
